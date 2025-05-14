@@ -307,7 +307,33 @@
       transform: translateY(1px);
     }
 
-    /* Nav buttons style */
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background-color: #cccccc;
+    }
+
+    button:disabled:hover {
+      transform: none;
+      box-shadow: none;
+    }
+    
+    button[disabled]:hover::after {
+      content: "Cần chụp ảnh trước";
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 5px 10px;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
+      border-radius: 4px;
+      font-size: 12px;
+      z-index: 100;
+      white-space: nowrap;
+    }
+
+    /* CSS cho các nút điều hướng trong header */
     .nav-button {
       padding: 10px 15px;
       background: linear-gradient(135deg, rgba(76, 175, 80, 0.8), rgba(56, 142, 60, 0.8));
@@ -321,6 +347,7 @@
       gap: 8px;
       transition: all 0.3s ease;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-right: 10px;
     }
 
     .nav-button i {
@@ -888,34 +915,49 @@
 
 <div class="container main-container">
   <div class="left-panel">
-    <h3><i class="fas fa-map-marker-alt"></i> Nhập tọa độ để đánh dấu vị trí</h3>    <div class="controls">
-      <input type="text" id="coordInput" placeholder="Ví dụ: 20.856554, 106.676188">      <select id="actionTypeSelect" title="Chọn loại hành động" data-tooltip="Chọn loại hành động" aria-label="Chọn loại hành động">
-        <option value="">Chọn loại hành động</option>
-        <option value="trash" data-icon="trash-alt">Bãi Rác Hoang</option>
-        <option value="animal" data-icon="paw">Động Vật Hoang</option>
-        <option value="fire" data-icon="fire">Đám Cháy</option>
-      </select>
-      <button onclick="addMarkerFromString()" data-tooltip="Thêm điểm đánh dấu mới"><i class="fas fa-plus-circle"></i> Đánh dấu</button>
-      <button onclick="getCurrentLocation()" data-tooltip="Sử dụng vị trí hiện tại của bạn"><i class="fas fa-crosshairs"></i> Lấy vị trí hiện tại</button>
+    <h3><i class="fas fa-map-marker-alt"></i> Nhập tọa độ để đánh dấu vị trí</h3>    <div class="controls">      <input type="text" id="coordInput" placeholder="Ví dụ: 20.856554, 106.676188" oninput="checkFormCompletion()">      <select id="actionTypeSelect" title="Loại rác" data-tooltip="Loại rác" aria-label="Loại rác" onchange="checkFormCompletion()">
+        <option value="">Loại rác</option>
+        <option value="recyclable" data-icon="recycle">Rác tái chế</option>
+        <option value="organic" data-icon="apple-alt">Rác hữu cơ</option>
+        <option value="general" data-icon="trash-alt">Rác không tái chế</option>
+        <option value="hazardous" data-icon="skull">Rác nguy hại</option>
+      </select>      <button id="add-marker-btn" onclick="addMarkerFromString()" data-tooltip="Thêm điểm đánh dấu mới" disabled><i class="fas fa-plus-circle"></i> Đánh dấu</button>
+      <button id="capture-photo-btn" disabled data-tooltip="Chụp ảnh gửi kèm"><i class="fas fa-camera"></i> Chụp ảnh</button>
     </div> 
-    <div id="map"></div>
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-      <h4><i class="fas fa-list"></i> Danh sách vị trí đã đánh dấu</h4>
-      <button onclick="clearAllMarkers()" class="clear-markers-btn" data-tooltip="Xóa tất cả vị trí đã đánh dấu" aria-label="Xóa tất cả vị trí">
-        <i class="fas fa-trash-alt"></i> Xóa tất cả
-      </button>    </div>    <table id="markerTable">
-      <thead>
-        <tr>
-          <th class="col-number">#</th>
-          <th class="col-delete">Xóa</th>
-          <th class="col-coords">Tọa độ</th>
-          <th class="col-time">Thời gian</th>
-          <th class="col-action">Hành động</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table></div>
+    <div id="map"></div>    </div>
   <!-- Right panel removed - chat functionality deleted -->
+</div>
+
+<!-- Modal chụp ảnh -->
+<div id="cameraModal" class="modal" style="display: none;">
+  <div class="modal-content" style="max-width: 600px;">
+    <h2><i class="fas fa-camera"></i> Chụp ảnh</h2>
+    <span class="close-modal" style="cursor: pointer; float: right;">&times;</span>
+    
+    <div id="camera-capture-container" style="margin: 20px 0;">
+      <video id="camera-video" style="width: 100%; border-radius: 8px;" autoplay></video>
+      <canvas id="camera-canvas" style="display: none;"></canvas>
+      <div style="display: flex; justify-content: center; margin-top: 15px;">
+        <button onclick="takePhoto()" style="background: var(--primary-color);"><i class="fas fa-camera"></i> Chụp</button>
+      </div>
+    </div>
+    
+    <div id="camera-action-container" style="display: none; flex-direction: column; align-items: center; margin: 20px 0;">
+      <img id="camera-preview" style="max-width: 100%; border-radius: 8px; margin-bottom: 15px;" />
+      <div style="display: flex; gap: 10px;">
+        <button onclick="retakePhoto()" style="background: #dc3545;"><i class="fas fa-redo"></i> Chụp lại</button>
+        <button onclick="savePhoto()"><i class="fas fa-check"></i> Lưu ảnh</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal hiển thị ảnh full screen -->
+<div id="fullImageModal" class="modal" style="display: none;">
+  <div class="modal-content" style="max-width: 90%; background: transparent; box-shadow: none; padding: 0;">
+    <span class="close-modal" style="cursor: pointer; position: absolute; top: 20px; right: 20px; color: white; font-size: 30px;">&times;</span>
+    <img id="full-image" style="max-width: 100%; max-height: 90vh; display: block; margin: 0 auto;" />
+  </div>
 </div>
 
 <!-- Modal đăng nhập -->
@@ -994,6 +1036,12 @@
 
   let markers = {};
   function addMarkerFromString() {
+    // Kiểm tra xem đã chụp ảnh chưa
+    if (!capturedImage) {
+      showNotification('Vui lòng chụp ảnh trước khi đánh dấu!', 'error');
+      return;
+    }
+
     const input = document.getElementById('coordInput').value.trim();
     const parts = input.split(',');
 
@@ -1012,19 +1060,35 @@
 
     const actionType = document.getElementById('actionTypeSelect').value;
     if (!actionType) {
-      showNotification('Vui lòng chọn loại hành động', 'error');
+      showNotification('Vui lòng chọn loại rác', 'error');
       return;
     }
 
     const timestamp = new Date().toISOString();
     const newMarkerRef = database.ref('markers').push();
-    newMarkerRef.set({ lat, lng, timestamp, actionType });    document.getElementById('coordInput').value = '';
+    
+    // Lưu thông tin marker và URL ảnh
+    newMarkerRef.set({ 
+      lat, 
+      lng, 
+      timestamp, 
+      actionType,
+      imageUrl: capturedImage // Trong môi trường thực tế, phải upload lên Firebase Storage trước
+    });
+    
+    document.getElementById('coordInput').value = '';
     document.getElementById('actionTypeSelect').selectedIndex = 0;
+    
+    // Vô hiệu hóa nút đánh dấu sau khi đã sử dụng
+    document.getElementById('add-marker-btn').disabled = true;
+    
+    // Xóa ảnh đã chụp
+    capturedImage = null;
     
     // Reset hiển thị dropdown tùy chỉnh
     const styled = document.querySelector('.select-styled .select-text');
     if (styled) {
-      styled.innerHTML = `<i class="fas fa-hand-pointer"></i><span>Chọn loại hành động</span>`;
+      styled.innerHTML = `<i class="fas fa-hand-pointer"></i><span>Loại rác</span>`;
     }
     
     showNotification('Đã thêm điểm đánh dấu thành công!', 'success');
@@ -1041,9 +1105,8 @@
     const styled = document.createElement('div');
     styled.className = 'select-styled';
     styled.innerHTML = `
-      <div class="select-text">
-        <i class="fas fa-hand-pointer"></i>
-        <span>Chọn loại hành động</span>
+      <div class="select-text">        <i class="fas fa-hand-pointer"></i>
+        <span>Loại rác</span>
       </div>
       <div class="select-arrow">
         <i class="fas fa-chevron-down"></i>
@@ -1053,19 +1116,18 @@
     // Tạo danh sách options
     const options = document.createElement('div');
     options.className = 'select-styled-options';
-    
-    // Thêm option mặc định
-    const defaultOption = document.createElement('div');
-    defaultOption.className = 'select-option';
+      // Thêm option mặc định
+    const defaultOption = document.createElement('div');    defaultOption.className = 'select-option';
     defaultOption.setAttribute('data-value', '');
-    defaultOption.innerHTML = `<i class="fas fa-hand-pointer"></i><span>Chọn loại hành động</span>`;
+    defaultOption.innerHTML = `<i class="fas fa-hand-pointer"></i><span>Loại rác</span>`;
     options.appendChild(defaultOption);
     
     // Thêm các options với icons
     const optionData = [
-      { value: 'trash', icon: 'trash-alt', text: 'Bãi Rác Hoang' },
-      { value: 'animal', icon: 'paw', text: 'Động Vật Hoang' },
-      { value: 'fire', icon: 'fire', text: 'Đám Cháy' }
+      { value: 'recyclable', icon: 'recycle', text: 'Rác tái chế' },
+      { value: 'organic', icon: 'apple-alt', text: 'Rác hữu cơ' },
+      { value: 'general', icon: 'trash-alt', text: 'Rác không tái chế' },
+      { value: 'hazardous', icon: 'skull', text: 'Rác nguy hại' }
     ];
     
     optionData.forEach(item => {
@@ -1089,9 +1151,7 @@
       e.stopPropagation();
       this.classList.toggle('active');
       options.classList.toggle('active');
-    });
-    
-    // Xử lý sự kiện chọn option
+    });    // Xử lý sự kiện chọn option
     document.querySelectorAll('.select-option').forEach(opt => {
       opt.addEventListener('click', function() {
         const value = this.getAttribute('data-value');
@@ -1101,12 +1161,23 @@
         // Cập nhật hiển thị
         styled.querySelector('.select-text').innerHTML = `<i class="${icon}"></i><span>${text}</span>`;
         
-        // Cập nhật giá trị cho select gốc
+        // Cập nhật giá trị cho select gốc - đảm bảo giá trị được cập nhật đúng
         select.value = value;
+        
+        // Hiển thị giá trị đã chọn trong console để debug
+        console.log('Đã chọn loại rác:', value, text);
         
         // Đóng dropdown
         styled.classList.remove('active');
         options.classList.remove('active');
+        
+        // Tự động lấy vị trí hiện tại khi đã chọn loại rác
+        if (value) {
+          // Đảm bảo actionTypeSelect đã được cập nhật
+          setTimeout(() => {
+            getCurrentLocation();
+          }, 100);
+        }
       });
     });
     
@@ -1131,8 +1202,24 @@
     // Chuyển đổi action type để hiển thị
     let actionLabel = "";
     let actionIcon = "";
-    
-    switch (actionType) {
+      switch (actionType) {
+      case "recyclable":
+        actionLabel = "Rác tái chế";
+        actionIcon = "recycle";
+        break;
+      case "organic":
+        actionLabel = "Rác hữu cơ";
+        actionIcon = "apple-alt";
+        break;
+      case "general":
+        actionLabel = "Rác không tái chế";
+        actionIcon = "trash-alt";
+        break;
+      case "hazardous":
+        actionLabel = "Rác nguy hại";
+        actionIcon = "skull";
+        break;
+      // Keep legacy support
       case "trash":
         actionLabel = "Bãi Rác Hoang";
         actionIcon = "trash-alt";
@@ -1148,7 +1235,7 @@
       default:
         actionLabel = actionType || "Chưa xác định";
         actionIcon = "question-circle";
-    }    const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map)
+    }const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map)
       .bindPopup(`
         <div style="text-align: center;">
           <strong>Vị trí được đánh dấu</strong><br>
@@ -1335,7 +1422,7 @@
 
     const actionType = document.getElementById('actionTypeSelect').value;
     if (!actionType) {
-      showNotification('Vui lòng chọn loại hành động', 'error');
+      showNotification('Vui lòng chọn loại rác', 'error');
       return;
     }
 
@@ -1359,29 +1446,42 @@
         locateBtn.innerHTML = originalText;
         locateBtn.disabled = false;
 
-        // Focus vào vị trí đó
-        map.setView([lat, lng], 15);
+        // Focus vào vị trí đó        map.setView([lat, lng], 15);
           document.getElementById('actionTypeSelect').selectedIndex = 0;
         
         // Reset hiển thị dropdown tùy chỉnh
         const styled = document.querySelector('.select-styled .select-text');
         if (styled) {
-          styled.innerHTML = `<i class="fas fa-hand-pointer"></i><span>Chọn loại hành động</span>`;
+          styled.innerHTML = `<i class="fas fa-hand-pointer"></i><span>Loại rác</span>`;
         }
         
         showNotification('Đã đánh dấu vị trí hiện tại của bạn!', 'success');
-      },
-      (error) => {
+      },      (error) => {
         // Khôi phục nút
         locateBtn.innerHTML = originalText;
         locateBtn.disabled = false;
         
-        showNotification('Không thể lấy vị trí: ' + error.message, 'error');
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
+        // Hiển thị thông báo lỗi chi tiết hơn
+        let errorMsg = 'Không thể lấy vị trí: ';
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMsg += 'Trình duyệt không được phép truy cập vị trí. Vui lòng cấp quyền truy cập vị trí.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMsg += 'Không thể xác định vị trí hiện tại.';
+            break;
+          case error.TIMEOUT:
+            errorMsg += 'Quá thời gian chờ xác định vị trí.';
+            break;
+          default:
+            errorMsg += error.message;
+        }
+        showNotification(errorMsg, 'error');
+        console.error('Geolocation error:', error);
+      },      {
+        enableHighAccuracy: true,  // Yêu cầu độ chính xác cao
+        timeout: 15000,            // Tăng timeout lên 15 giây để có nhiều thời gian xác định vị trí chính xác hơn
+        maximumAge: 0              // Luôn yêu cầu vị trí mới
       }
     );
   }
@@ -1420,8 +1520,142 @@
             row.classList.remove('highlight-row');
           }, 2000);
         }
-      });
+      });    }
+  }
+  // Xử lý chức năng Camera
+  let stream;
+  let capturedImage;
+  const cameraModal = document.getElementById('cameraModal');
+  const captureContainer = document.getElementById('camera-capture-container');
+  const actionContainer = document.getElementById('camera-action-container');
+  const video = document.getElementById('camera-video');
+  const canvas = document.getElementById('camera-canvas');
+  const preview = document.getElementById('camera-preview');
+    // Hàm kiểm tra xem form đã hoàn thành và hợp lệ chưa
+  function checkFormCompletion() {
+    const coordinates = document.getElementById('coordInput').value.trim();
+    const actionType = document.getElementById('actionTypeSelect').value;
+    const capturePhotoBtn = document.getElementById('capture-photo-btn');
+    
+    // Kiểm tra xem đã nhập tọa độ và loại rác chưa
+    if (coordinates && actionType) {
+      // Kiểm tra định dạng tọa độ
+      const parts = coordinates.split(',');
+      if (parts.length === 2 && !isNaN(parseFloat(parts[0])) && !isNaN(parseFloat(parts[1]))) {
+        // Nếu đã đủ thông tin và hợp lệ, kích hoạt nút chụp ảnh
+        capturePhotoBtn.disabled = false;
+        capturePhotoBtn.setAttribute('data-tooltip', 'Chụp ảnh gửi kèm');
+        return true;
+      } else {
+        capturePhotoBtn.disabled = true;
+        capturePhotoBtn.setAttribute('data-tooltip', 'Tọa độ không hợp lệ. Định dạng chuẩn: lat, lng');
+      }
+    } else {
+      // Nếu thiếu thông tin, vô hiệu hóa nút chụp ảnh
+      capturePhotoBtn.disabled = true;
+      
+      // Cập nhật tooltip cho nút chụp ảnh để hiển thị lý do
+      if (!coordinates && !actionType) {
+        capturePhotoBtn.setAttribute('data-tooltip', 'Vui lòng nhập tọa độ và chọn loại rác trước');
+      } else if (!coordinates) {
+        capturePhotoBtn.setAttribute('data-tooltip', 'Vui lòng nhập tọa độ trước');
+      } else if (!actionType) {
+        capturePhotoBtn.setAttribute('data-tooltip', 'Vui lòng chọn loại rác trước');
+      }
     }
+    
+    return false;
+  }
+    // Bắt sự kiện khi click vào nút chụp ảnh
+  document.getElementById('capture-photo-btn').addEventListener('click', () => {
+    // Kiểm tra lại một lần nữa để đảm bảo an toàn
+    if (checkFormCompletion()) {
+      // Nếu đã nhập đủ thông tin thì mở camera
+      showCameraModal();
+    }
+  });
+    // Đóng modal khi click vào nút đóng
+  document.querySelectorAll('.close-modal').forEach(elem => {
+    elem.addEventListener('click', event => {
+      const modal = event.target.closest('.modal');
+      if (modal) {
+        modal.style.display = 'none';
+        
+        // Dừng camera nếu đang đóng modal camera
+        if (modal.id === 'cameraModal') {
+          stopCamera();
+          // Nếu đóng modal camera mà chưa lưu ảnh, đảm bảo nút đánh dấu vẫn bị vô hiệu hóa
+          if (!capturedImage) {
+            document.getElementById('add-marker-btn').disabled = true;
+          }
+        }
+      }
+    });
+  });
+  
+  function showCameraModal() {
+    cameraModal.style.display = 'flex';
+    captureContainer.style.display = 'block';
+    actionContainer.style.display = 'none';
+    startCamera();
+  }
+  
+  function startCamera() {
+    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+      .then(mediaStream => {
+        stream = mediaStream;
+        video.srcObject = mediaStream;
+      })
+      .catch(error => {
+        alert('Không thể truy cập camera: ' + error.message);
+      });
+  }
+  
+  function stopCamera() {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+  }
+    function takePhoto() {
+    const context = canvas.getContext('2d');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Chuyển canvas thành dữ liệu hình ảnh
+    capturedImage = canvas.toDataURL('image/jpeg');
+    preview.src = capturedImage;
+    
+    // Hiển thị phần xem trước và ẩn phần quay video
+    captureContainer.style.display = 'none';
+    actionContainer.style.display = 'flex';
+  }
+  
+  function retakePhoto() {
+    capturedImage = null;
+    captureContainer.style.display = 'block';
+    actionContainer.style.display = 'none';
+  }  function savePhoto() {
+    // Lưu ảnh vào storage hoặc database (Firebase Storage)
+    if (capturedImage) {
+      // Đóng modal camera
+      cameraModal.style.display = 'none';
+      stopCamera();
+      
+      // Kích hoạt nút đánh dấu
+      document.getElementById('add-marker-btn').disabled = false;
+      
+      showNotification('Đã chụp ảnh thành công! Bạn có thể ấn nút "Đánh dấu" để lưu vị trí.', 'success');
+    }
+  }
+  
+  // Hiển thị ảnh đầy đủ khi click vào một ảnh nhỏ
+  function showFullImage(url) {
+    const fullImageModal = document.getElementById('fullImageModal');
+    const fullImage = document.getElementById('full-image');
+    
+    fullImage.src = url;
+    fullImageModal.style.display = 'flex';
   }
 </script>
 
