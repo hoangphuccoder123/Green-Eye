@@ -1,0 +1,14 @@
+/* Mobile responsiveness for custom dropdown */
+@media (max-width: 768px) {
+  .controls {
+    flex-direction: column;
+  }
+  
+  input, button, select, .select-with-icons, .select-styled {
+    width: 100%;
+  }
+  
+  .select-styled-options {
+    width: 100%;
+  }
+}

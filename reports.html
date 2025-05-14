@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Green Eye - Báo cáo và Thống kê</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css">
+  <style>    :root {
+      --primary-color: #4CAF50;
+      --primary-dark: #388E3C;
+      --primary-light: #81C784;
+      --accent-color: #00C853;
+      --background: #f4f7fc;
+      --card-bg: #ffffff; 
+      --text: #333333;
+      --text-secondary: #666666;
+      --border-color: #e0e0e0;
+    }
+      /* Removed navbar styles */
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--background);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+    
+    header {
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      padding: 20px;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    nav {
+      display: flex;
+      gap: 15px;
+    }
+
+    header button, .tab-button {
+      padding: 10px 16px;
+      background-color: #ffffff;
+      color: #4CAF50;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    header button:hover, .tab-button:hover {
+      background-color: #e6e6e6;
+      transform: translateY(-2px);
+    }
+
+    .tab-button.active {
+      background-color: var(--primary-dark);
+      color: white;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .tab-container {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.5s;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    h2 {
+      color: var(--primary-color);
+      margin-top: 0;
+      border-bottom: 2px solid var(--primary-light);
+      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h2 i {
+      font-size: 24px;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    td {
+      background-color: #ffffff;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #f9f9f9;
+    }
+
+    .status-complete {
+      background-color: #d4edda;
+      color: #155724;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .status-pending {
+      background-color: #fff3cd;
+      color: #856404;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .status-overdue {
+      background-color: #f8d7da;
+      color: #721c24;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .chart-container {
+      margin-top: 30px;
+      width: 100%;
+      height: 400px;
+    }
+
+    .chart-wrapper {
+      display: flex;
+      gap: 20px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+
+    .chart-box {
+      flex: 1;
+      min-width: 300px;
+      padding: 15px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    .chart-box h3 {
+      margin-top: 0;
+      color: var(--primary-dark);
+      font-size: 18px;
+    }
+
+    .stats-card-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stats-card {
+      flex: 1;
+      min-width: 200px;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .stats-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    }
+
+    .stats-card i {
+      font-size: 32px;
+      margin-bottom: 10px;
+      color: var(--primary-color);
+    }
+
+    .stats-card h3 {
+      margin: 10px 0;
+      font-size: 28px;
+      color: var(--primary-dark);
+    }
+
+    .stats-card p {
+      color: var(--text-secondary);
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .filters {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-group label {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .filter-group select, .filter-group input {
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .btn-export {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn-export:hover {
+      background: var(--primary-dark);
+    }
+
+    .notification-panel {
+      margin-top: 20px;
+      border: 1px solid #ffecb5;
+      background-color: #fff8e6;
+      border-radius: 8px;
+      padding: 15px;
+    }
+
+    .notification-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      color: #856404;
+      font-weight: 600;
+    }
+
+    .notification-list {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .notification-item {
+      padding: 10px;
+      border-bottom: 1px solid #ffecb5;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .notification-item:last-child {
+      border-bottom: none;
+    }
+
+    .notification-message {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .notification-message i {
+      color: #e0a800;
+    }
+
+    .badge {
+      display: inline-block;
+      min-width: 20px;
+      padding: 3px 7px;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1;
+      color: #fff;
+      text-align: center;
+      white-space: nowrap;
+      vertical-align: middle;
+      background-color: #e0a800;
+      border-radius: 10px;
+    }
+
+    @media screen and (max-width: 768px) {
+      .container {
+        width: 95%;
+        padding: 15px;
+      }
+      
+      .stats-card, .chart-box {
+        min-width: 100%;
+      }
+
+      th, td {
+        padding: 8px 5px;
+        font-size: 14px;
+      }
+    }
+  </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<header>  <h1><i class="fas fa-leaf"></i> Green Eye</h1>  <nav>
+    <button onclick="window.location.href='show.html'"><i class="fas fa-list"></i> Danh sách vị trí</button>
+  </nav>
+</header>
+
+<div class="container">
+  <div class="tab-container">
+    <button class="tab-button active" onclick="openTab('tab-processed')"><i class="fas fa-check-circle"></i> Bãi rác đã xử lý</button>
+    <button class="tab-button" onclick="openTab('tab-reminders')"><i class="fas fa-bell"></i> Cảnh báo & nhắc nhở</button>
+    <button class="tab-button" onclick="openTab('tab-reports')"><i class="fas fa-chart-bar"></i> Báo cáo thống kê</button>
+  </div>
+
+  <!-- Tab Bãi rác đã xử lý -->
+  <div id="tab-processed" class="tab-content active">
+    <h2><i class="fas fa-check-circle"></i> Danh sách bãi rác đã xử lý</h2>
+
+    <div class="filters">
+      <div class="filter-group">
+        <label for="filter-waste-type">Loại rác:</label>
+        <select id="filter-waste-type">
+          <option value="">Tất cả</option>
+          <option value="recyclable">Rác tái chế</option>
+          <option value="organic">Rác hữu cơ</option>
+          <option value="general">Rác không tái chế</option>
+          <option value="hazardous">Rác nguy hại</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="date-from">Từ ngày:</label>
+        <input type="date" id="date-from">
+      </div>
+      <div class="filter-group">
+        <label for="date-to">Đến ngày:</label>
+        <input type="date" id="date-to">
+      </div>
+      <button class="btn-export" id="btn-export-processed">
+        <i class="fas fa-file-export"></i> Xuất báo cáo
+      </button>
+    </div>
+
+    <table id="processed-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Tọa độ</th>
+          <th>Loại rác</th>
+          <th>Ngày đánh dấu</th>
+          <th>Ngày xử lý</th>
+          <th>Thời gian xử lý</th>
+        </tr>
+      </thead>
+      <tbody id="processed-table-body">
+        <!-- Dữ liệu sẽ được thêm vào đây từ JavaScript -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tab Cảnh báo & Nhắc nhở -->
+  <div id="tab-reminders" class="tab-content">
+    <h2><i class="fas fa-bell"></i> Cảnh báo & Nhắc nhở</h2>
+    
+    <div class="notification-panel">
+      <div class="notification-title">
+        <span><i class="fas fa-exclamation-triangle"></i> Bãi rác cần xử lý gấp</span>
+        <span class="badge" id="urgent-count">0</span>
+      </div>
+      <ul class="notification-list" id="urgent-notifications">
+        <!-- Dữ liệu sẽ được thêm vào đây từ JavaScript -->
+      </ul>
+    </div>
+
+    <div class="notification-panel" style="margin-top: 30px; background-color: #e8f4f8; border-color: #b8daff;">
+      <div class="notification-title" style="color: #004085;">
+        <span><i class="fas fa-info-circle"></i> Nhắc nhở</span>
+        <span class="badge" id="reminder-count" style="background-color: #007bff;">0</span>
+      </div>
+      <ul class="notification-list" id="general-reminders">
+        <!-- Dữ liệu sẽ được thêm vào đây từ JavaScript -->
+      </ul>
+    </div>
+  </div>
+
+  <!-- Tab Báo cáo -->
+  <div id="tab-reports" class="tab-content">
+    <h2><i class="fas fa-chart-bar"></i> Báo cáo thống kê</h2>
+
+    <div class="filters">
+      <div class="filter-group">
+        <label for="report-period">Thời gian:</label>
+        <select id="report-period" onchange="changePeriod()">
+          <option value="week">Tuần này</option>
+          <option value="month">Tháng này</option>
+          <option value="quarter">Quý này</option>
+          <option value="year">Năm này</option>
+        </select>
+      </div>
+      <button class="btn-export" id="btn-export-report">
+        <i class="fas fa-file-export"></i> Xuất báo cáo
+      </button>
+    </div>
+
+    <div class="stats-card-container">
+      <div class="stats-card">
+        <i class="fas fa-map-marker-alt"></i>
+        <h3 id="total-markers">0</h3>
+        <p>Tổng số điểm đánh dấu</p>
+      </div>
+      <div class="stats-card">
+        <i class="fas fa-check-circle"></i>
+        <h3 id="completed-markers">0</h3>
+        <p>Đã xử lý</p>
+      </div>
+      <div class="stats-card">
+        <i class="fas fa-clock"></i>
+        <h3 id="pending-markers">0</h3>
+        <p>Chưa xử lý</p>
+      </div>
+      <div class="stats-card">
+        <i class="fas fa-tachometer-alt"></i>
+        <h3 id="avg-process-time">0</h3>
+        <p>Thời gian xử lý trung bình (ngày)</p>
+      </div>
+    </div>
+
+    <div class="chart-wrapper">
+      <div class="chart-box">
+        <h3>Phân bố theo loại rác</h3>
+        <canvas id="waste-type-chart"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>Tỷ lệ xử lý</h3>
+        <canvas id="completion-chart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-box" style="margin-top: 30px;">
+      <h3>Số lượng bãi rác được xử lý theo thời gian</h3>
+      <canvas id="time-series-chart"></canvas>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+  // Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyCM1Gibhr1y7x-YWgdzzAbN0mlGnROx2pc",
+    authDomain: "maptest-3cefd.firebaseapp.com",
+    databaseURL: "https://maptest-3cefd-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "maptest-3cefd",
+    storageBucket: "maptest-3cefd.appspot.com",
+    messagingSenderId: "841069533439",
+    appId: "1:841069533439:web:28737f0f9784a1b027d4ca",
+    measurementId: "G-T26Z6GD1VF"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+  // Tab switching functionality
+  function openTab(tabId) {
+    // Hide all tab content
+    const tabContents = document.getElementsByClassName('tab-content');
+    for (let i = 0; i < tabContents.length; i++) {
+      tabContents[i].classList.remove('active');
+    }
+
+    // Remove active class from all tab buttons
+    const tabButtons = document.getElementsByClassName('tab-button');
+    for (let i = 0; i < tabButtons.length; i++) {
+      tabButtons[i].classList.remove('active');
+    }
+
+    // Show the selected tab
+    document.getElementById(tabId).classList.add('active');
+
+    // Add active class to the clicked button
+    const activeButton = document.querySelector(`.tab-button[onclick="openTab('${tabId}')"]`);
+    activeButton.classList.add('active');
+    
+    // If switching to reports tab, regenerate reports with current filters
+    if (tabId === 'tab-reports') {
+      generateReports();
+    } else if (tabId === 'tab-reminders') {
+      loadRemindersAndNotifications();
+    } else if (tabId === 'tab-processed') {
+      loadProcessedWasteData();
+    }
+  }
+
+  // Date formatting helper function
+  function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    const dateOptions = {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    };
+    const timeOptions = {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    };
+    return date.toLocaleDateString('vi-VN', dateOptions) + ' ' + date.toLocaleTimeString('vi-VN', timeOptions);
+  }
+
+  // Calculate time difference in days
+  function daysBetween(date1, date2) {
+    const oneDay = 24 * 60 * 60 * 1000; // milliseconds in one day
+    const firstDate = new Date(date1);
+    const secondDate = new Date(date2);
+    return Math.round(Math.abs((firstDate - secondDate) / oneDay));
+  }
+
+  // Action type to readable name mapping
+  const actionNames = {
+    recyclable: 'Rác tái chế',
+    organic: 'Rác hữu cơ',
+    general: 'Rác không tái chế',
+    hazardous: 'Rác nguy hại',
+    trash: 'Bãi rác hoang',
+    animal: 'Động vật hoang',
+    fire: 'Đám cháy'
+  };
+  // Predefined reminder thresholds in days
+  const URGENT_THRESHOLD = 2;  // After 2 days show urgent notification
+  const REMINDER_THRESHOLD = 2;  // After 2 days show reminder notification
+
+  // Color palette for charts
+  const chartColors = {
+    recyclable: '#27ae60',
+    organic: '#f39c12',
+    general: '#3498db',
+    hazardous: '#e74c3c',
+    trash: '#7f8c8d',
+    animal: '#9b59b6',
+    fire: '#c0392b',
+    completed: '#2ecc71',
+    pending: '#e67e22',
+    overdue: '#e74c3c'
+  };
+
+  // Load and display processed waste data
+  function loadProcessedWasteData() {
+    // Clear existing data
+    const tableBody = document.getElementById('processed-table-body');
+    tableBody.innerHTML = '';
+
+    // Get filter values
+    const wasteType = document.getElementById('filter-waste-type').value;
+    const dateFrom = document.getElementById('date-from').value ? new Date(document.getElementById('date-from').value) : null;
+    const dateTo = document.getElementById('date-to').value ? new Date(document.getElementById('date-to').value) : null;
+
+    // Fetch data from Firebase
+    database.ref('markers').once('value').then(snapshot => {
+      const markers = [];
+      let rowIndex = 1;
+
+      snapshot.forEach(childSnapshot => {
+        const id = childSnapshot.key;
+        const data = childSnapshot.val();
+        
+        // Only include cleaned/processed markers
+        if (data.cleaned) {
+          // Apply filters
+          if (wasteType && data.actionType !== wasteType) return;
+          
+          const markedDate = new Date(data.timestamp);
+          const cleanedDate = data.cleanedTimestamp ? new Date(data.cleanedTimestamp) : new Date();
+          
+          if (dateFrom && markedDate < dateFrom) return;
+          if (dateTo && cleanedDate > dateTo) return;
+          
+          // Calculate processing time
+          const processingDays = daysBetween(markedDate, cleanedDate);
+          
+          // Add to array for sorting
+          markers.push({
+            id,
+            lat: data.lat,
+            lng: data.lng,
+            actionType: data.actionType,
+            timestamp: data.timestamp,
+            cleanedTimestamp: data.cleanedTimestamp || new Date().toISOString(),
+            processingDays
+          });
+        }
+      });
+      
+      // Sort by cleaned date (most recent first)
+      markers.sort((a, b) => new Date(b.cleanedTimestamp) - new Date(a.cleanedTimestamp));
+      
+      // Populate table
+      markers.forEach(marker => {
+        const row = tableBody.insertRow();
+        row.innerHTML = `
+          <td>${rowIndex++}</td>
+          <td>${marker.lat.toFixed(5)}, ${marker.lng.toFixed(5)}</td>
+          <td>${actionNames[marker.actionType] || 'Không xác định'}</td>
+          <td>${formatDate(marker.timestamp)}</td>
+          <td>${formatDate(marker.cleanedTimestamp)}</td>
+          <td>${marker.processingDays} ngày</td>
+        `;
+      });
+      
+      if (markers.length === 0) {
+        const row = tableBody.insertRow();
+        row.innerHTML = `<td colspan="6" style="text-align: center;">Không có dữ liệu phù hợp với bộ lọc</td>`;
+      }
+    });
+  }
+  // Load and display reminders and notifications
+  function loadRemindersAndNotifications() {
+    const urgentList = document.getElementById('urgent-notifications');
+    const reminderList = document.getElementById('general-reminders');
+    
+    // Clear existing data
+    urgentList.innerHTML = '';
+    reminderList.innerHTML = '';
+    
+    // Current date for comparison
+    const currentDate = new Date();
+    let urgentCount = 0;
+    let reminderCount = 0;
+    
+    // Get filters
+    const wasteTypeFilter = document.getElementById('filter-waste-type').value;
+    const dateFromFilter = document.getElementById('date-from').value ? new Date(document.getElementById('date-from').value) : null;
+    const dateToFilter = document.getElementById('date-to').value ? new Date(document.getElementById('date-to').value) : null;
+    
+    // Fetch data from Firebase
+    database.ref('markers').once('value').then(snapshot => {
+      const notProcessedMarkers = [];
+      
+      snapshot.forEach(childSnapshot => {
+        const id = childSnapshot.key;
+        const data = childSnapshot.val();
+        
+        // Only include not cleaned/processed markers
+        if (!data.cleaned) {
+          // Apply waste type filter if specified
+          if (wasteTypeFilter && data.actionType !== wasteTypeFilter) {
+            return; // Skip this marker if it doesn't match the filter
+          }
+          
+          const markedDate = new Date(data.timestamp);
+          
+          // Apply date filters if specified
+          if (dateFromFilter && markedDate < dateFromFilter) {
+            return; // Skip if marked before filter start date
+          }
+          if (dateToFilter && markedDate > dateToFilter) {
+            return; // Skip if marked after filter end date
+          }
+          
+          const daysSinceMarked = daysBetween(markedDate, currentDate);
+          
+          notProcessedMarkers.push({
+            id,
+            lat: data.lat,
+            lng: data.lng,
+            actionType: data.actionType,
+            timestamp: data.timestamp,
+            daysSinceMarked
+          });
+        }
+      });
+      
+      // Sort by days since marked (oldest first)
+      notProcessedMarkers.sort((a, b) => b.daysSinceMarked - a.daysSinceMarked);
+      
+      // Process notifications
+      notProcessedMarkers.forEach(marker => {
+        const locationStr = `${marker.lat.toFixed(5)}, ${marker.lng.toFixed(5)}`;
+        const typeStr = actionNames[marker.actionType] || 'Không xác định';
+          if (marker.daysSinceMarked >= REMINDER_THRESHOLD) {
+          // Sau 2 ngày bắt đầu hiển thị thông báo
+          if (marker.daysSinceMarked > 5) {
+            // Nếu sau 5 ngày vẫn chưa xử lý, hiển thị thông báo gấp
+            urgentList.innerHTML += `
+              <li class="notification-item">
+                <div class="notification-message">
+                  <i class="fas fa-exclamation-circle"></i>
+                  <span><strong>${typeStr}</strong> tại vị trí ${locationStr} chưa được xử lý sau ${marker.daysSinceMarked} ngày</span>
+                </div>
+                <button class="btn-export" onclick="viewOnMap('${marker.id}')">
+                  <i class="fas fa-map-marker-alt"></i> Xem
+                </button>
+              </li>
+            `;
+            urgentCount++;
+          } else {
+            // Nếu mới sau 2-5 ngày, hiển thị nhắc nhở thông thường
+            reminderList.innerHTML += `
+              <li class="notification-item">
+                <div class="notification-message">
+                  <i class="fas fa-info-circle"></i>
+                  <span><strong>${typeStr}</strong> tại vị trí ${locationStr} cần được xử lý (${marker.daysSinceMarked} ngày)</span>
+                </div>
+                <button class="btn-export" onclick="viewOnMap('${marker.id}')" style="background-color: #007bff;">
+                  <i class="fas fa-map-marker-alt"></i> Xem
+                </button>
+              </li>
+            `;
+            reminderCount++;
+          }
+        }
+      });
+      
+      // Update counters
+      document.getElementById('urgent-count').textContent = urgentCount;
+      document.getElementById('reminder-count').textContent = reminderCount;
+      
+      // Display message if no notifications
+      if (urgentCount === 0) {
+        urgentList.innerHTML = `<li class="notification-item">Không có cảnh báo gấp nào</li>`;
+      }
+      
+      if (reminderCount === 0) {
+        reminderList.innerHTML = `<li class="notification-item">Không có nhắc nhở nào</li>`;
+      }
+    });
+  }
+
+  // View marker on map
+  function viewOnMap(markerId) {
+    // Redirect to main map with focus on this marker
+    window.location.href = `main.html?focus=${markerId}`;
+  }
+  // Generate statistics and reports
+  function generateReports() {
+    database.ref('markers').once('value').then(snapshot => {
+      let totalMarkers = 0;
+      let completedMarkers = 0;
+      let pendingMarkers = 0;
+      let totalProcessingDays = 0;
+      
+      // For charts
+      const wasteTypeCounts = {
+        recyclable: 0,
+        organic: 0,
+        general: 0,
+        hazardous: 0,
+        trash: 0,
+        animal: 0,
+        fire: 0
+      };
+      
+      const processingStatus = {
+        completed: 0,
+        pending: 0,
+        overdue: 0
+      };
+      
+      // Time series data
+      const timeSeriesData = {};
+      const currentDate = new Date();
+      const reportPeriod = document.getElementById('report-period').value;
+      
+      // Get waste type filter (if on the processed tab)
+      const wasteTypeFilter = document.getElementById('filter-waste-type').value;
+      const dateFromFilter = document.getElementById('date-from').value ? new Date(document.getElementById('date-from').value) : null;
+      const dateToFilter = document.getElementById('date-to').value ? new Date(document.getElementById('date-to').value) : null;
+        // Determine date range for the selected period
+      let startDate;
+      switch (reportPeriod) {
+        case 'week':
+          startDate = new Date(currentDate);
+          startDate.setDate(currentDate.getDate() - 7);
+          break;
+        case 'month':
+          startDate = new Date(currentDate);
+          startDate.setMonth(currentDate.getMonth() - 1);
+          break;
+        case 'quarter':
+          startDate = new Date(currentDate);
+          startDate.setMonth(currentDate.getMonth() - 3);
+          break;
+        case 'year':
+          startDate = new Date(currentDate);
+          startDate.setFullYear(currentDate.getFullYear() - 1);
+          break;
+      }
+      
+      // If date filters are active, override the period start date
+      if (dateFromFilter) {
+        startDate = dateFromFilter;
+      }
+      
+      // If date to filter is active, override the current date
+      const endDate = dateToFilter || currentDate;
+      
+      snapshot.forEach(childSnapshot => {
+        const data = childSnapshot.val();
+        const markedDate = new Date(data.timestamp);
+        
+        // Apply waste type filter if specified
+        if (wasteTypeFilter && data.actionType !== wasteTypeFilter) {
+          return; // Skip this marker if it doesn't match the filter
+        }
+        
+        // Check if the marker is within the selected time range
+        if (markedDate >= startDate && markedDate <= endDate) {
+          totalMarkers++;
+          
+          // Count by waste type
+          if (wasteTypeCounts.hasOwnProperty(data.actionType)) {
+            wasteTypeCounts[data.actionType]++;
+          }
+          
+          // Process status data
+          if (data.cleaned) {
+            const cleanedDate = new Date(data.cleanedTimestamp || currentDate);
+            
+            // Skip if the cleaned date is outside the filter range
+            if (cleanedDate < startDate || cleanedDate > endDate) {
+              return;
+            }
+            
+            completedMarkers++;
+            processingStatus.completed++;
+            
+            // Calculate processing time
+            const processingDays = daysBetween(markedDate, cleanedDate);
+            totalProcessingDays += processingDays;
+            
+            // Add to time series
+            const cleanedMonth = cleanedDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+            if (!timeSeriesData[cleanedMonth]) {
+              timeSeriesData[cleanedMonth] = 0;
+            }
+            timeSeriesData[cleanedMonth]++;
+          } else {
+            pendingMarkers++;
+            const daysSinceMarked = daysBetween(markedDate, currentDate);
+            
+            if (daysSinceMarked > 5) {
+              processingStatus.overdue++;
+            } else if (daysSinceMarked >= REMINDER_THRESHOLD) {
+              processingStatus.pending++;
+            } else {
+              processingStatus.pending++;
+            }
+          }
+        }
+      });
+      
+      // Update stats cards
+      document.getElementById('total-markers').textContent = totalMarkers;
+      document.getElementById('completed-markers').textContent = completedMarkers;
+      document.getElementById('pending-markers').textContent = pendingMarkers;
+      
+      // Calculate average processing time
+      const averageProcessingDays = completedMarkers > 0 ? (totalProcessingDays / completedMarkers).toFixed(1) : 0;
+      document.getElementById('avg-process-time').textContent = averageProcessingDays;
+      
+      // Create charts
+      createWasteTypeChart(wasteTypeCounts);
+      createCompletionStatusChart(processingStatus);
+      createTimeSeriesChart(timeSeriesData);
+    });
+  }
+
+  // Create waste type distribution chart
+  function createWasteTypeChart(data) {
+    const ctx = document.getElementById('waste-type-chart').getContext('2d');
+    
+    // Destroy existing chart if it exists
+    if (window.wasteTypeChart) {
+      window.wasteTypeChart.destroy();
+    }
+    
+    // Prepare labels and data
+    const labels = [];
+    const values = [];
+    const backgroundColor = [];
+    
+    for (const type in data) {
+      if (data[type] > 0) { // Only include non-zero values
+        labels.push(actionNames[type] || type);
+        values.push(data[type]);
+        backgroundColor.push(chartColors[type] || '#777');
+      }
+    }
+    
+    window.wasteTypeChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: values,
+          backgroundColor: backgroundColor,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.raw || 0;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = Math.round((value / total) * 100);
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+  
+  // Create completion status chart
+  function createCompletionStatusChart(data) {
+    const ctx = document.getElementById('completion-chart').getContext('2d');
+    
+    // Destroy existing chart if it exists
+    if (window.completionChart) {
+      window.completionChart.destroy();
+    }
+    
+    window.completionChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Đã xử lý', 'Đang chờ xử lý', 'Quá hạn'],
+        datasets: [{
+          data: [data.completed, data.pending, data.overdue],
+          backgroundColor: [
+            chartColors.completed,
+            chartColors.pending, 
+            chartColors.overdue
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.raw || 0;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+    // Create time series chart
+  function createTimeSeriesChart(data) {
+    const ctx = document.getElementById('time-series-chart').getContext('2d');
+    
+    // Destroy existing chart if it exists
+    if (window.timeSeriesChart) {
+      window.timeSeriesChart.destroy();
+    }
+    
+    // Sort the time series data chronologically
+    const sortedLabels = Object.keys(data).sort((a, b) => {
+      return new Date(a) - new Date(b);
+    });
+    
+    // If we have no data based on current filters
+    if (sortedLabels.length === 0) {
+      // Create empty chart with message
+      window.timeSeriesChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Không có dữ liệu'],
+          datasets: [{
+            label: 'Số bãi rác đã xử lý',
+            data: [0],
+            backgroundColor: chartColors.completed,
+            borderColor: chartColors.completed,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Số lượng'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Thời gian'
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                title: function() {
+                  return 'Không có dữ liệu phù hợp với bộ lọc';
+                }
+              }
+            }
+          }
+        }
+      });
+      return;
+    }
+    
+    const sortedData = sortedLabels.map(label => data[label]);
+    
+    window.timeSeriesChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: sortedLabels,
+        datasets: [{
+          label: 'Số bãi rác đã xử lý',
+          data: sortedData,
+          backgroundColor: chartColors.completed,
+          borderColor: chartColors.completed,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Số lượng'
+            }
+          },
+          x: {
+            title: {
+              display: true,
+              text: 'Thời gian'
+            }
+          }
+        }
+      }
+    });
+  }
+    // Change report period
+  function changePeriod() {
+    generateReports();
+  }
+  
+  // Apply filters across all tabs
+  function applyFiltersAcrossTabs() {
+    // Apply the current filters
+    loadProcessedWasteData();
+    loadRemindersAndNotifications();
+    generateReports();
+  }
+  
+  // Export processed waste data to CSV
+  document.getElementById('btn-export-processed').addEventListener('click', function() {
+    exportTableToCSV('processed-table', 'danh_sach_bai_rac_da_xu_ly.csv');
+  });
+  
+  // Export report data to CSV
+  document.getElementById('btn-export-report').addEventListener('click', function() {
+    const period = document.getElementById('report-period').value;
+    exportReportToCSV('bao_cao_' + period + '.csv');
+  });
+  
+  // Export table to CSV file
+  function exportTableToCSV(tableId, filename) {
+    const table = document.getElementById(tableId);
+    let csvContent = "data:text/csv;charset=utf-8,";
+    
+    // Add header row
+    const headerRow = [];
+    for (const th of table.querySelectorAll('thead th')) {
+      headerRow.push(th.textContent);
+    }
+    csvContent += headerRow.join(',') + "\n";
+    
+    // Add data rows
+    for (const row of table.querySelectorAll('tbody tr')) {
+      const dataRow = [];
+      for (const cell of row.querySelectorAll('td')) {
+        // Remove HTML tags and normalize content
+        let cellData = cell.textContent.replace(/"/g, '""');
+        dataRow.push(`"${cellData}"`);
+      }
+      csvContent += dataRow.join(',') + "\n";
+    }
+    
+    // Create download link and trigger it
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+  
+  // Export report data to CSV
+  function exportReportToCSV(filename) {
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Chỉ số,Giá trị\n";
+    csvContent += `"Tổng số điểm đánh dấu","${document.getElementById('total-markers').textContent}"\n`;
+    csvContent += `"Đã xử lý","${document.getElementById('completed-markers').textContent}"\n`;
+    csvContent += `"Chưa xử lý","${document.getElementById('pending-markers').textContent}"\n`;
+    csvContent += `"Thời gian xử lý trung bình (ngày)","${document.getElementById('avg-process-time').textContent}"\n`;
+    
+    // Create download link and trigger it
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+  
+  // Set default filter dates (last 30 days)
+  function setDefaultDates() {
+    const today = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    
+    // Format dates for input elements (YYYY-MM-DD format)
+    document.getElementById('date-to').valueAsDate = today;
+    document.getElementById('date-from').valueAsDate = thirtyDaysAgo;
+    
+    // Set custom placeholders to show the expected format
+    document.getElementById('date-from').setAttribute('placeholder', 'YYYY-MM-DD');
+    document.getElementById('date-to').setAttribute('placeholder', 'YYYY-MM-DD');
+  }
+  
+  // Format a date object to ISO date string (YYYY-MM-DD)
+  function formatISODate(date) {
+    return date.toISOString().split('T')[0];
+  }
+  // Initialize the page
+  window.onload = function() {
+    setDefaultDates();
+    loadProcessedWasteData();
+    loadRemindersAndNotifications();
+    generateReports();
+      // Set up filter event listeners
+    document.getElementById('filter-waste-type').addEventListener('change', applyFiltersAcrossTabs);
+    document.getElementById('date-from').addEventListener('change', applyFiltersAcrossTabs);
+    document.getElementById('date-to').addEventListener('change', applyFiltersAcrossTabs);
+  };
+</script>
+
+</body>
+</html>

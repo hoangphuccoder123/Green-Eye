@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phân loại rác</title>
+     <!-- Import Google Font - Roboto -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <!-- Import Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.8.6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.3/dist/teachablemachine-image.min.js"></script>  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <style>
+    :root {
+      --primary-color: #1b5e20;
+      --primary-light: #4c8c4a;
+      --primary-dark: #003300;
+      --accent-color: #81c784;
+      --text-color: #2e7d32;
+      --background-light: #e0f7e9;
+      --background-dark: #c8e6c9;
+      --card-background: #ffffff;
+      --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      --border-radius: 12px;
+      --spacing: 20px;
+    }
+      /* Removed navbar styles */
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(to bottom, var(--background-light), var(--background-dark));
+      color: var(--text-color);
+      line-height: 1.6;
+      padding: var(--spacing);
+      min-height: 100vh;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--spacing);
+    }
+
+    /* Header styles */
+    .app-header {
+      text-align: center;
+      margin-bottom: var(--spacing);
+    }
+
+    .app-header h1 {
+      font-size: 2.5rem;
+      color: var(--primary-color);
+      margin-bottom: 10px;
+      animation: slideInFromTop 1.2s ease-out;
+    }
+
+    .app-header p {
+      font-size: 1.2rem;
+      color: var(--text-color);
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    /* Card layout system */
+    .card-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--spacing);
+      justify-content: center;
+      margin-top: var(--spacing);
+    }
+
+    .card {
+      background: var(--card-background);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: var(--spacing);
+      flex: 1 1 400px;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: fadeIn 1.5s ease-in-out;
+    }
+
+    .card-header {
+      width: 100%;
+      margin-bottom: 15px;
+      border-bottom: 2px solid var(--accent-color);
+      padding-bottom: 10px;
+    }
+
+    .card-header h2 {
+      font-size: 1.5rem;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-body {
+      width: 100%;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Camera/Video styles */
+    .video-container {
+      width: 100%;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      margin-bottom: var(--spacing);
+    }
+
+    video, canvas {
+      max-width: 100%;
+      height: auto;
+      border: 2px solid var(--primary-color);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+    }
+
+    /* Button styles */
+    .btn {
+      padding: 12px 25px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      background-color: var(--primary-color);
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn:hover {
+      background-color: var(--primary-light);
+      transform: translateY(-2px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn i {
+      font-size: 18px;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+    }
+
+    /* Result display */
+    .result-container {
+      margin-top: var(--spacing);
+      padding: 15px;
+      border: 2px solid var(--accent-color);
+      border-radius: var(--border-radius);
+      background-color: rgba(255, 255, 255, 0.7);
+      width: 100%;
+      transition: all 0.3s ease;
+    }
+
+    .result-container:hover {
+      transform: scale(1.02);
+    }
+
+    #result {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    /* Animation keyframes */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideInFromTop {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Responsive design adjustments */
+    @media (max-width: 768px) {
+      .card {
+        flex: 1 1 100%;
+      }
+
+      .app-header h1 {
+        font-size: 2rem;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .video-container {
+        height: auto;
+      }
+
+      video, canvas {
+        width: 100%;
+        height: auto;
+      }
+    }
+
+    @media (max-width: 480px) {
+      :root {
+        --spacing: 15px;
+      }
+
+      .app-header h1 {
+        font-size: 1.8rem;
+      }
+
+      .card {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- App Header -->    <header class="app-header">      <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 15px;">
+        <h1><i class="fas fa-recycle"></i> Phân loại rác thông minh</h1>
+      </div>
+      <p>Sử dụng trí tuệ nhân tạo để nhận diện và phân loại rác thải một cách chính xác</p>
+    </header>
+      <!-- Main Content Cards -->
+    <div class="card-wrapper">
+      <!-- Camera Card -->
+      <section class="card">
+        <div class="card-header">
+          <h2><i class="fas fa-camera"></i> Camera</h2>
+        </div>
+        <div class="card-body">
+          <div class="video-container">
+            <video id="webcam" autoplay playsinline></video>
+          </div>
+          <button class="btn btn-primary" onclick="predictWaste()">
+            <i class="fas fa-magnifying-glass"></i> Phân loại rác
+          </button>
+        </div>
+      </section>
+      
+      <!-- Results Card -->
+      <section class="card">
+        <div class="card-header">
+          <h2><i class="fas fa-chart-simple"></i> Kết quả phân tích</h2>
+        </div>
+        <div class="card-body">
+          <div class="result-container">
+            <div id="result">
+              <i class="fas fa-circle-info"></i> Chưa có kết quả, vui lòng nhấn nút phân loại
+            </div>
+          </div>
+          <div id="waste-info" class="result-container" style="margin-top: 20px; display: none;">
+            <h3 style="color: var(--primary-color); margin-bottom: 10px;">Hướng dẫn xử lý</h3>
+            <div id="waste-guidelines"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+    
+    <!-- Phần quy tắc phân loại rác -->
+    <div class="card-wrapper" style="margin-top: 30px;">
+      <section class="card" style="max-width: 100%;">
+        <div class="card-header">
+          <h2><i class="fas fa-book"></i> Quy tắc phân loại rác</h2>
+        </div>
+        <div class="card-body">
+          <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">
+            <!-- Thùng rác màu xanh lá -->
+            <div style="flex: 1; min-width: 280px; background-color: #e8f5e9; padding: 15px; border-radius: 10px; border-left: 5px solid #2e7d32;">
+              <h3 style="color: #2e7d32; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-trash" style="color: #2e7d32;"></i> Thùng rác màu XANH LÁ
+              </h3>
+              <p style="margin: 10px 0;">Dùng để chứa <strong>rác hữu cơ</strong>, có khả năng phân hủy sinh học.</p>
+              <ul style="padding-left: 20px; text-align: left;">
+                <li>Thức ăn thừa</li>
+                <li>Vỏ trái cây, rau củ</li>
+                <li>Lá cây, cỏ</li>
+                <li>Bã cà phê, bã trà</li>
+                <li>Vỏ trứng</li>
+              </ul>
+            </div>
+            
+            <!-- Thùng rác màu vàng -->
+            <div style="flex: 1; min-width: 280px; background-color: #FFF8E1; padding: 15px; border-radius: 10px; border-left: 5px solid #F9A825;">
+              <h3 style="color: #F9A825; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-trash" style="color: #F9A825;"></i> Thùng rác màu VÀNG
+              </h3>
+              <p style="margin: 10px 0;">Dùng để chứa <strong>rác tái chế</strong> và các loại rác thải khác.</p>
+              <ul style="padding-left: 20px; text-align: left;">
+                <li>Chai nhựa, hộp nhựa</li>
+                <li>Lon kim loại, đồ hộp</li>
+                <li>Giấy, bìa carton</li>
+                <li>Thủy tinh, chai lọ</li>
+                <li>Vải, quần áo cũ</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div style="margin-top: 20px; background-color: #EDE7F6; padding: 15px; border-radius: 10px; text-align: left;">
+            <h3 style="color: #5E35B1; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+              <i class="fas fa-lightbulb"></i> Lưu ý khi phân loại rác
+            </h3>
+            <ul style="padding-left: 20px;">
+              <li>Rửa sạch rác trước khi phân loại</li>
+              <li>Tách riêng các loại vật liệu khác nhau</li>
+              <li>Bỏ nắp chai nhựa riêng</li>
+              <li>Tái sử dụng túi nhựa khi có thể</li>
+              <li>Không vứt rác thải nguy hại lẫn với rác thông thường</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    let model, webcam, labelContainer, maxPredictions;
+
+    const URL = "tm-my-image-model/"; // Đặt thư mục chứa model.json, metadata.json, weights.bin ở đây
+
+    async function init() {
+      try {
+        // Hiển thị trạng thái khởi tạo
+        document.getElementById("result").innerHTML = `
+          <i class="fas fa-spinner fa-spin"></i> Đang khởi tạo hệ thống...
+        `;
+        
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+
+        // Tải model AI
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
+
+        // Khởi tạo webcam với kích thước linh hoạt hơn
+        webcam = new tmImage.Webcam(480, 360, true); // Kích thước lớn hơn cho chất lượng tốt hơn
+        await webcam.setup();
+        await webcam.play();
+        window.requestAnimationFrame(loop);
+
+        // Thay thế phần tử video bằng canvas và thêm class để styling
+        const webcamCanvas = webcam.canvas;
+        webcamCanvas.classList.add("webcam-canvas");
+        document.getElementById("webcam").replaceWith(webcamCanvas);
+        
+        // Cập nhật trạng thái sau khi khởi tạo thành công
+        document.getElementById("result").innerHTML = `
+          <i class="fas fa-circle-info"></i> Hệ thống đã sẵn sàng, hãy nhấn nút phân loại
+        `;
+      } catch (error) {
+        console.error("Error initializing the model or webcam:", error);
+        document.getElementById("result").innerHTML = `
+          <i class="fas fa-circle-exclamation"></i> Lỗi: Không thể khởi tạo mô hình hoặc webcam.
+          <div style="font-size: 0.9rem; margin-top: 8px; color: #d32f2f;">${error.message}</div>
+        `;
+      }
+    }
+
+    async function loop() {
+      webcam.update();
+      window.requestAnimationFrame(loop);
+    }
+
+    async function predictWaste() {
+      try {
+        // Hiển thị loading trong khi xử lý
+        document.getElementById("result").innerHTML = `
+          <i class="fas fa-spinner fa-spin"></i> Đang phân tích...
+        `;
+
+        const prediction = await model.predict(webcam.canvas);
+
+        // Log all predictions for debugging
+        console.log("Predictions:", prediction);
+
+        let highest = prediction[0];
+        for (let i = 1; i < prediction.length; i++) {
+          if (prediction[i].probability > highest.probability) {
+            highest = prediction[i];
+          }
+        }
+
+        // Map labels to more user-friendly names if needed
+        const labelMapping = {
+          "Organic Waste": "Rác hữu cơ",
+          "Recycle Waste": "Rác tái chế",
+          "Re": "Rác tái chế" // Thêm ánh xạ cho trường hợp "Re"
+        };        // Thông tin về cách xử lý mỗi loại rác
+        const wasteGuidelines = {
+          "Rác hữu cơ": `
+            <p><strong>Cách xử lý rác hữu cơ:</strong></p>
+            <ul style="text-align: left; padding-left: 20px;">
+              <li>Phân hủy tự nhiên thành phân compost</li>
+              <li><span style="color: #2e7d32; font-weight: bold;">Đặt vào thùng rác màu XANH LÁ</span></li>
+              <li>Có thể tái sử dụng làm phân bón cho cây trồng</li>
+              <li>Thời gian phân hủy ngắn, thân thiện với môi trường</li>
+            </ul>
+            <p style="margin-top: 10px; background-color: #e8f5e9; padding: 8px; border-radius: 5px; border-left: 4px solid #2e7d32;">
+              <i class="fas fa-info-circle"></i> Rác hữu cơ bao gồm: thức ăn thừa, vỏ trái cây, rau củ quả, lá cây...
+            </p>
+          `,
+          "Rác tái chế": `
+            <p><strong>Cách xử lý rác tái chế:</strong></p>
+            <ul style="text-align: left; padding-left: 20px;">
+              <li>Phân loại theo vật liệu: nhựa, kim loại, giấy, v.v.</li>
+              <li><span style="color: #F9A825; font-weight: bold;">Đặt vào thùng rác màu VÀNG</span></li>
+              <li>Làm sạch trước khi tái chế</li>
+              <li>Có thể được tái chế thành sản phẩm mới</li>
+            </ul>
+            <p style="margin-top: 10px; background-color: #FFF8E1; padding: 8px; border-radius: 5px; border-left: 4px solid #F9A825;">
+              <i class="fas fa-info-circle"></i> Rác tái chế bao gồm: chai nhựa, lon kim loại, hộp giấy, thủy tinh...
+            </p>
+          `
+        };        const resultLabel = labelMapping[highest.className.trim()] || highest.className.trim();
+        const confidence = Math.round(highest.probability * 100);
+        
+        // Hiển thị kết quả với icon phù hợp và độ chính xác
+        let resultIcon, trashColor, colorStyle, colorName;
+        
+        if (resultLabel === "Rác hữu cơ") {
+          resultIcon = "fa-leaf";
+          trashColor = "#2e7d32"; // Màu xanh lá
+          colorStyle = "background-color: #e8f5e9; border-color: #2e7d32;";
+          colorName = "XANH LÁ";
+        } else {
+          resultIcon = "fa-recycle";
+          trashColor = "#F9A825"; // Màu vàng
+          colorStyle = "background-color: #FFF8E1; border-color: #F9A825;";
+          colorName = "VÀNG";
+        }
+        
+        document.getElementById("result").innerHTML = `
+          <i class="fas ${resultIcon}" style="color: ${trashColor};"></i> 
+          Kết quả: <strong>${resultLabel}</strong>
+          <div style="font-size: 0.9rem; margin-top: 8px;">Độ chính xác: ${confidence}%</div>
+          <div style="margin-top: 12px; padding: 8px; border-radius: 5px; border: 2px solid ${trashColor}; ${colorStyle}">
+            <i class="fas fa-trash"></i> Vui lòng bỏ vào thùng rác màu <strong style="color: ${trashColor};">${colorName}</strong>
+          </div>
+        `;
+
+        // Hiển thị thông tin về cách xử lý loại rác
+        const wasteInfoElement = document.getElementById("waste-info");
+        const wasteGuidelinesElement = document.getElementById("waste-guidelines");
+        
+        if (wasteGuidelines[resultLabel]) {
+          wasteGuidelinesElement.innerHTML = wasteGuidelines[resultLabel];
+          wasteInfoElement.style.display = "block";
+        } else {
+          wasteInfoElement.style.display = "none";
+        }
+        
+        console.log(`Full result: ${resultLabel} (${confidence}%)`);
+      } catch (error) {
+        console.error("Error during prediction:", error);
+        document.getElementById("result").innerHTML = `
+          <i class="fas fa-circle-exclamation"></i> Lỗi: Không thể thực hiện phân loại.
+        `;
+        document.getElementById("waste-info").style.display = "none";
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

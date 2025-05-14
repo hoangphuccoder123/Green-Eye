@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html>
+<head>  <title>Xem các vị trí đã đánh dấu</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" /><style>    :root {
+      --primary-color: #4CAF50;
+      --primary-dark: #2E7D32;
+      --secondary-color: #007bff;
+      --danger-color: #dc3545;
+    }
+      /* Removed navbar styles */
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f4f7fc;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }    
+    header {
+      width: 100%;
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      padding: 20px;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 32px;
+    }
+
+    header button {
+      padding: 10px 16px;
+      background-color: #ffffff;
+      color: #4CAF50;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    header button:hover {
+      background-color: #e6e6e6;
+    }
+
+    h3 {
+      color: #333;
+      margin-top: 1rem;
+      text-align: center;
+    }
+
+    #map {
+      height: 500px;
+      width: 80%;
+      margin-top: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    table {
+      width: 80%;
+      margin-top: 20px;
+      border-collapse: collapse;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    td {
+      background-color: #ffffff;
+    }
+
+    button.view-btn {
+      background-color: #007bff;
+      color: white;
+      padding: 5px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      font-size: 14px;
+      margin-right: 6px;
+    }
+
+    button.view-btn:hover {
+      background-color: #0056b3;
+    }
+
+    button.delete-btn {
+      background-color: #dc3545;
+      color: white;
+      padding: 5px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      font-size: 14px;
+    }    button.delete-btn:hover {
+      background-color: #b02a37;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.6);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 600px;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }    .btn {
+      padding: 8px 16px;
+      background-color: var(--secondary-color);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #location-image {
+      border-radius: 8px;
+    }
+
+    .marker-image-container {
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .marker-image {
+      max-width: 100%;
+      max-height: 150px;
+      cursor: pointer;
+      border-radius: 5px;
+      border: 2px solid var(--primary-color);
+    }
+  </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCM1Gibhr1y7x-YWgdzzAbN0mlGnROx2pc",
+      authDomain: "maptest-3cefd.firebaseapp.com",
+      databaseURL: "https://maptest-3cefd-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "maptest-3cefd",
+      storageBucket: "maptest-3cefd.appspot.com",
+      messagingSenderId: "841069533439",
+      appId: "1:841069533439:web:28737f0f9784a1b027d4ca",
+      measurementId: "G-T26Z6GD1VF"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+  </script>
+</head>
+<body>
+
+<header><h1>Green Eye</h1>
+  <div>
+    <button onclick="window.location.href='reports.html'" style="background-color: #28a745; color: white;">
+      <i class="fas fa-chart-bar"></i> Báo cáo
+    </button>
+  </div>
+</header>
+
+<div class="container">
+  <h3>Danh sách vị trí đã đánh dấu:</h3>
+
+  <div id="map"></div>
+
+  <table id="markerTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Tọa độ</th>
+        <th>Loại</th>
+        <th>Hành động</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+
+
+<!-- Modal hiển thị ảnh -->
+<div id="imageModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h4>Hình ảnh vị trí</h4>
+    <img id="location-image" style="width: 100%; max-height: 80vh; object-fit: contain;" />
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+  let map = L.map('map').setView([21.0285, 105.8542], 8);
+  let markers = {};
+  // Các biểu tượng khác nhau cho các loại hành động
+  const icons = {
+    // Loại rác mới
+    recyclable: new L.Icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/3156/3156999.png',
+      iconSize: [30, 30],
+      iconAnchor: [15, 30],
+      popupAnchor: [0, -30]
+    }),
+    organic: new L.Icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/2439/2439330.png',
+      iconSize: [30, 30],
+      iconAnchor: [15, 30],
+      popupAnchor: [0, -30]
+    }),
+    general: new L.Icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/1500/1500624.png',
+      iconSize: [30, 30],
+      iconAnchor: [15, 30],
+      popupAnchor: [0, -30]
+    }),
+    hazardous: new L.Icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/2624/2624046.png',
+      iconSize: [30, 30],
+      iconAnchor: [15, 30],
+      popupAnchor: [0, -30]
+    }),
+    // Giữ lại hỗ trợ cho loại cũ
+    trash: new L.Icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/1500/1500624.png',
+      iconSize: [30, 30],
+      iconAnchor: [15, 30],
+      popupAnchor: [0, -30]
+    }),
+    animal: new L.Icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/1006/1006359.png',
+      iconSize: [30, 30],
+      iconAnchor: [15, 30],
+      popupAnchor: [0, -30]
+    }),
+    fire: new L.Icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/2761/2761270.png',
+      iconSize: [30, 30],
+      iconAnchor: [15, 30],
+      popupAnchor: [0, -30]
+    })
+  };
+  // Chuyển đổi actionType thành tên dễ hiểu
+  const actionNames = {
+    // Loại rác mới
+    recyclable: 'Rác tái chế',
+    organic: 'Rác hữu cơ',
+    general: 'Rác không tái chế',
+    hazardous: 'Rác nguy hại',
+    // Giữ lại hỗ trợ cho loại cũ
+    trash: 'Bãi rác Hoang',
+    animal: 'Động vật hoang',
+    fire: 'Đám cháy'
+  };
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+  function addMarker(id, lat, lng, actionType, cleaned = false, imageUrl = null) {
+    let marker;
+    const icon = icons[actionType] || icons.trash; // Default to trash if no type is provided
+
+    marker = L.marker([lat, lng], { icon });
+
+    let popupContent = "Vị trí: " + lat.toFixed(5) + ", " + lng.toFixed(5);
+    
+    // Nếu có ảnh, thêm ảnh vào popup
+    if (imageUrl) {
+      popupContent += `
+        <div class="marker-image-container">
+          <img src="${imageUrl}" class="marker-image" onclick="showImageModal('${imageUrl}')">
+          <p>Nhấp vào ảnh để phóng to</p>
+        </div>
+      `;
+    }
+
+    marker.addTo(map)
+      .bindPopup(popupContent);
+
+    markers[id] = marker;
+
+    const table = document.getElementById('markerTable').getElementsByTagName('tbody')[0];
+    const row = table.insertRow();
+    row.setAttribute('data-id', id);
+
+    // Thay thế actionType bằng tên dễ hiểu
+    const actionTypeName = actionNames[actionType] || 'Không xác định';
+
+    row.innerHTML = `
+      <td>${table.rows.length}</td>
+      <td>${lat.toFixed(5)}, ${lng.toFixed(5)}</td>
+      <td>${actionTypeName}</td>
+      <td>
+        <button class="view-btn" onclick="viewMarker('${id}')">Xem</button>
+        <button class="delete-btn" onclick="deleteMarker('${id}')">Xoá</button>
+        ${!cleaned
+          ? `<button class="view-btn" onclick="markAsCleaned('${id}')">Hoàn thành</button>`
+          : `<span style="color: green; font-weight: bold;">Đã dọn</span>`}
+      </td>
+    `;
+  }
+  function viewMarker(id) {
+    const marker = markers[id];
+    if (marker) {
+      map.setView(marker.getLatLng(), 15);
+      marker.openPopup();
+    }
+  }
+  
+  // Hiển thị ảnh trong modal
+  function showImageModal(imageUrl) {
+    const modal = document.getElementById('imageModal');
+    const img = document.getElementById('location-image');
+    img.src = imageUrl;
+    modal.style.display = 'block';
+  }
+
+  function deleteMarker(id) {
+    if (confirm("Bạn có chắc chắn muốn xoá marker này không?")) {
+      if (markers[id]) {
+        map.removeLayer(markers[id]);
+        delete markers[id];
+      }
+
+      database.ref('markers/' + id).remove();
+
+      const row = document.querySelector(`tr[data-id="${id}"]`);
+      if (row) row.remove();
+
+      const table = document.getElementById('markerTable').getElementsByTagName('tbody')[0];
+      Array.from(table.rows).forEach((row, index) => {
+        row.cells[0].innerText = index + 1;
+      });
+    }
+  }
+  function markAsCleaned(id) {
+    // Add current timestamp when the marker is marked as cleaned
+    const cleanedTimestamp = new Date().toISOString();
+    database.ref('markers/' + id).update({ 
+      cleaned: true,
+      cleanedTimestamp: cleanedTimestamp 
+    })
+      .then(() => {
+        location.reload(); // Refresh để cập nhật UI
+      })
+      .catch(err => {
+        alert("Lỗi khi cập nhật trạng thái: " + err.message);
+      });
+  }
+  // Lấy dữ liệu từ Firebase và hiển thị
+  database.ref('markers').once('value')
+    .then(snapshot => {
+      snapshot.forEach(childSnapshot => {
+        const id = childSnapshot.key;
+        const data = childSnapshot.val();
+        addMarker(id, data.lat, data.lng, data.actionType, data.cleaned || false, data.imageUrl || null);
+      });
+    })
+    .catch(error => {
+      console.error("Lỗi khi tải dữ liệu từ Firebase:", error);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+    const imageModal = document.getElementById('imageModal');
+
+    // Đóng modal khi nhấp vào dấu X
+    document.querySelectorAll('.close').forEach(closeBtn => {
+      closeBtn.addEventListener('click', function() {
+        this.parentElement.parentElement.style.display = 'none';
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

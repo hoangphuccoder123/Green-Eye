@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Green Eye - Trợ lý Phân loại Rác thải</title>  <style>
+    /* Basic Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+    }
+      /* Removed navbar styles */
+    
+    /* Nature-themed Body Style */
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background-color: #0a3d0a;
+      color: #e0e0e0;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      background-image: linear-gradient(to bottom right, #0a3d0a, #165016);
+    }    h3 {
+      margin-bottom: 15px;
+      color: #ffffff;
+      font-size: 20px;
+      font-weight: 600; 
+      text-align: center;
+      padding: 10px 0;
+      border-bottom: 2px solid #4CAF50;
+      position: relative;
+    }/* Chat Container */
+    #chat-container {
+      flex: 1;
+      height: 100%;
+      padding: 20px;
+      background: rgba(15, 40, 15, 0.8);
+      display: flex;
+      flex-direction: column;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    }    /* Chat Output */
+    #chat-output {
+      flex: 1;
+      overflow-y: auto;
+      border: 1px solid #3e6b3e;
+      border-radius: 10px;
+      padding: 15px;
+      background: rgba(20, 30, 20, 0.8);
+      margin-bottom: 15px;
+      scrollbar-width: thin;
+      scrollbar-color: #4CAF50 #242424;
+    }
+
+    #chat-output::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #chat-output::-webkit-scrollbar-thumb {
+      background-color: #555;
+      border-radius: 6px;
+    }
+
+    /* Chat Input and Buttons */
+    .input-area {
+      display: flex;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    #chat-input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #444;
+      border-radius: 4px;
+      background: #2d2d2d;
+      color: #e0e0e0;
+      height: 40px;
+    }
+
+    .button-group {
+      display: flex;
+      margin-left: 10px;
+    }    button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      background: #4CAF50;
+      color: #ffffff;
+      cursor: pointer;
+      font-size: 14px;
+      margin-left: 5px;
+      transition: all 0.2s;
+    }    button:hover {
+      background: #66BB6A;
+      transform: translateY(-2px);
+    }
+
+    button .material-symbols-outlined {
+      font-size: 18px;
+    }
+    
+    #voice-toggle.voice-off {
+      background-color: #555;
+      opacity: 0.7;
+    }
+    
+    #voice-toggle.voice-on {
+      background-color: #4CAF50;
+      opacity: 1;
+    }
+
+    /* Chat Messages */
+    #chat-output p {
+      margin: 8px 0;
+      padding: 10px 12px;
+      border-radius: 10px;
+      max-width: 85%;
+      word-wrap: break-word;
+    }    #chat-output p.user-message {
+      margin-left: auto;
+      background: #66BB6A;
+      color: #ffffff;
+      border-bottom-right-radius: 0;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    #chat-output p.ai-message {
+      margin-right: auto;
+      background: #2E7D32;
+      color: #ffffff;
+      border-bottom-left-radius: 0;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Speech rate control */
+    #speech-control {
+      display: flex;
+      align-items: center;
+      margin-left: 10px;
+    }
+
+    #speech-control label {
+      margin-right: 5px;
+      color: #e0e0e0;
+    }    #speech-rate {
+      width: 80px;
+      accent-color: #ff9800;
+    }    #rate-display {
+      min-width: 25px;
+      color: #e0e0e0;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    #language-select {
+      margin-left: 10px;
+      padding: 5px;
+      border: 1px solid #3e6b3e;
+      border-radius: 4px;
+      background: #2d2d2d;
+      color: #e0e0e0;
+    }
+  </style>
+</head>
+<body>  <!-- Navbar được đưa vào trong chat container -->  <div id="chat-container">
+    <div style="display: flex; justify-content: center; align-items: center;">
+      <h3 style="margin-bottom: 0; border-bottom: none;"><span style="color: #4CAF50;">GREEN EYE</span> - TRỢ LÝ PHÂN LOẠI RÁC THẢI</h3>
+    </div>
+    <div style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #4CAF50;"></div>
+    <div id="chat-output"></div>
+      <div class="input-area">
+      <input type="text" id="chat-input" placeholder="Nhập câu hỏi về phân loại rác thải..." />
+        <div class="button-group">
+        <button id="send-button" title="Gửi"><span class="material-symbols-outlined">send</span></button>
+        <button id="speech-button" title="Nói"><span class="material-symbols-outlined">mic</span></button>
+        <button id="voice-toggle" title="Bật/tắt đọc" class="voice-off"><span class="material-symbols-outlined">volume_off</span></button>
+        <button id="clear-button" title="Xóa chat">Clear</button>
+      </div>
+        <div id="speech-control">
+        <label for="speech-rate" title="Tốc độ nói"><span class="material-symbols-outlined">speed</span></label>
+        <input type="range" id="speech-rate" min="0.5" max="2.0" step="0.1" value="1">
+        <span id="rate-display">1.0</span>
+      </div>
+    </div>
+  </div>
+  
+  <script type="importmap">
+    {
+      "imports": {
+        "@google/generative-ai": "https://esm.run/@google/generative-ai"
+      }
+    }
+  </script>
+  
+  <script type="module">
+    import { GoogleGenerativeAI } from "@google/generative-ai";
+
+    const API_KEY = "AIzaSyBu9qXzymzcblC_kTx3Cpbr1bNENt-rbqo"; 
+    const genAI = new GoogleGenerativeAI(API_KEY);    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      systemInstruction: "Bạn là trợ lý AI chuyên về phân loại rác thải, cung cấp thông tin về luật và quy định phân loại rác thải hữu cơ và vô cơ. Trả lời bằng ngôn ngữ của người dùng (tiếng Việt hoặc tiếng Anh). Đối với tiếng Việt: Hãy cung cấp thông tin về cách phân loại rác, quy định, và lời khuyên thực tế. Đối với tiếng Anh: Cung cấp thông tin về phân loại rác và các quy tắc áp dụng.",
+      prompt: "Nếu được hỏi về cách phân loại rác, hãy đưa ra thông tin chi tiết về phân loại rác hữu cơ (thực phẩm, lá cây, giấy...) và rác vô cơ (nhựa, kim loại, thủy tinh...). Cung cấp các quy định hiện hành và lời khuyên thực tế.",
+    });
+
+    const generationConfig = {
+      temperature: 1,
+      topP: 0.95,
+      topK: 64,
+      maxOutputTokens: 8192,
+      responseMimeType: "text/plain",
+    };    const langConfig = {
+      speed: 2.0,
+      welcomeMessage: "Chào mừng bạn đến với Green Eye! Tôi là trợ lý AI chuyên về phân loại rác thải. Theo Nghị định 08/2022/NĐ-CP và Luật Bảo vệ Môi trường 2020, rác thải phải được phân loại thành: (1) Chất thải rắn sinh hoạt có khả năng tái chế (nhựa, giấy, kim loại, thủy tinh), (2) Chất thải thực phẩm/hữu cơ (thức ăn thừa, lá cây, rau củ), (3) Chất thải cồng kềnh (đồ nội thất, điện tử), và (4) Chất thải nguy hại (pin, bóng đèn, hóa chất). Bạn có thể hỏi tôi về cách phân loại đúng các loại rác, quy định mới nhất hoặc các mẹo xử lý rác thải thân thiện với môi trường.",
+      thinkingMessage: "AI đang suy nghĩ...", 
+      errorMessage: "Có lỗi xảy ra. Vui lòng thử lại."
+    };
+    
+    // Biến để theo dõi trạng thái voice
+    let voiceEnabled = false; // Mặc định là tắt
+
+    // Update rate display
+    const rateSlider = document.getElementById('speech-rate');
+    const rateDisplay = document.getElementById('rate-display');
+    
+    rateSlider.addEventListener('input', () => {
+      rateDisplay.textContent = parseFloat(rateSlider.value).toFixed(1);
+    });
+    
+    // Initialize rate display
+    rateDisplay.textContent = parseFloat(rateSlider.value).toFixed(1);
+
+    // Add queue management for speech
+    const speechQueue = {
+      speaking: false,
+      cancel() {
+        speechSynthesis.cancel();
+        this.speaking = false;
+        toggleUIState(false);
+      }
+    };
+
+    // Add UI state toggle function
+    function toggleUIState(disabled) {
+      const chatInput = document.getElementById('chat-input');
+      const sendButton = document.getElementById('send-button');
+      const speechButton = document.getElementById('speech-button');
+      
+      chatInput.disabled = disabled;
+      sendButton.disabled = disabled;
+      speechButton.disabled = disabled;
+      
+      if (disabled) {
+        chatInput.style.opacity = '0.6';
+        sendButton.style.opacity = '0.6';
+        speechButton.style.opacity = '0.6';
+        chatInput.placeholder = 'Đang phát âm thanh...';      } else {
+        chatInput.style.opacity = '1';
+        sendButton.style.opacity = '1';
+        speechButton.style.opacity = '1';
+        chatInput.placeholder = 'Nhập câu hỏi về phân loại rác thải...';
+      }
+    }    // Hàm chuyển văn bản thành âm thanh
+    function textToSpeech(text) {
+      // Kiểm tra xem voice có được bật không
+      if (!voiceEnabled) return;
+      
+      speechQueue.cancel();
+      toggleUIState(true); // Disable UI when speech starts
+      
+      const synth = window.speechSynthesis;
+
+      // Chia văn bản thành các đoạn nhỏ tại dấu câu
+      const segments = text.match(/[^.!?]+[.!?]+/g) || [text];
+      segments.forEach(segment => {
+        const utterance = new SpeechSynthesisUtterance(segment.trim());
+        configureUtterance(utterance);
+      });
+    }    function configureUtterance(utterance) {
+      const synth = window.speechSynthesis;
+      const voices = synth.getVoices();
+      
+      // Tìm giọng tiếng Việt
+      const msVietnameseVoice = voices.find(voice => 
+        voice.name.includes('Microsoft') && voice.lang === 'vi-VN'
+      );
+      const vietnameseVoice = voices.find(voice => voice.lang === 'vi-VN');
+      utterance.voice = msVietnameseVoice || vietnameseVoice || null;
+      
+      utterance.lang = 'vi-VN';
+      utterance.rate = langConfig.speed;
+      utterance.onend = () => {
+        speechQueue.speaking = false;
+        toggleUIState(false); // Re-enable UI when speech ends
+      };
+      
+      synth.speak(utterance);
+    }
+
+    // Hàm chuyển giọng nói thành văn bản
+    function startSpeechRecognition() {
+      const speechButton = document.getElementById('speech-button');
+      speechButton.style.background = '#1B5E20';
+      speechButton.innerHTML = '<span class="material-symbols-outlined">record_voice_over</span>';
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'vi-VN';
+      recognition.interimResults = false;
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('chat-input').value = transcript;
+        setTimeout(() => sendMessage(), 500);
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Recognition error: ', event.error);
+        resetSpeechButton();
+      };
+
+      recognition.onend = () => {
+        resetSpeechButton();
+      };
+      
+      function resetSpeechButton() {
+        speechButton.style.background = '#4CAF50';
+        speechButton.innerHTML = '<span class="material-symbols-outlined">mic</span>';
+      }
+
+      recognition.start();
+    }    // Hàm thực thi để bắt đầu phiên trò chuyện
+    async function run(userMessage) {
+      const chatSession = model.startChat({
+        generationConfig,
+        history: [
+          { role: "user", parts: [{ text: "Xin chào" }] },
+          { role: "model", parts: [{ text: "Xin chào! Tôi là trợ lý AI về phân loại rác thải của Green Eye. Tôi có thể giúp bạn tìm hiểu về cách phân loại rác thải theo Nghị định 08/2022/NĐ-CP và Luật Bảo vệ Môi trường 2020. Bạn muốn biết thông tin gì?" }] },
+          { role: "user", parts: [{ text: "Các quy định mới nhất về phân loại rác?" }] },
+          { role: "model", parts: [{ text: "Theo Nghị định 08/2022/NĐ-CP và Luật Bảo vệ Môi trường 2020, chất thải rắn sinh hoạt phải được phân loại thành 4 nhóm chính:\n\n1. Chất thải rắn sinh hoạt có khả năng tái chế: Giấy, nhựa, kim loại, cao su, nilon, thủy tinh...\n\n2. Chất thải thực phẩm/hữu cơ: Thức ăn thừa, rau quả, lá cây...\n\n3. Chất thải rắn cồng kềnh: Đồ nội thất, thiết bị điện tử...\n\n4. Chất thải rắn nguy hại: Pin, ắc quy, bóng đèn huỳnh quang, thuốc hết hạn...\n\nLuật quy định rằng mọi cá nhân, hộ gia đình phải phân loại rác tại nguồn. Chính quyền địa phương có trách nhiệm bố trí các điểm thu gom tương ứng. Người không tuân thủ có thể bị xử phạt từ 500.000 đến 1.000.000 đồng." }] },
+          { role: "user", parts: [{ text: "Rác hữu cơ là gì?" }] },
+          { role: "model", parts: [{ text: "Rác hữu cơ (hay chất thải thực phẩm/hữu cơ theo quy định mới) là loại rác có nguồn gốc từ sinh vật (thực vật, động vật) và có thể phân hủy tự nhiên. Đây là những chất thải có thể được vi sinh vật phân hủy thành các chất đơn giản hơn.\n\nTheo Nghị định 08/2022/NĐ-CP, nhóm này bao gồm: thực phẩm thừa, vỏ trái cây, rau củ hư, lá cây, cỏ cắt, bã cà phê, bã trà, vỏ trứng, xác động vật nhỏ, phân, giấy không tráng phủ đã bị nhiễm thực phẩm.\n\nRác hữu cơ thường được xử lý bằng phương pháp ủ phân compost để tạo ra phân bón tự nhiên cho đất, giảm lượng rác chôn lấp và giảm phát thải khí nhà kính." }] },
+          { role: "user", parts: [{ text: "Làm thế nào để phân loại rác tại nhà?" }] },
+          { role: "model", parts: [{ text: "Theo Nghị định 08/2022/NĐ-CP, để phân loại rác tại nhà đúng quy định, bạn cần chuẩn bị 4 thùng rác riêng biệt:\n\n1. Thùng màu xanh lam: Dành cho chất thải có khả năng tái chế (giấy, nhựa, kim loại, thủy tinh). Hãy rửa sạch trước khi bỏ vào thùng. Cần bảo quản khô ráo.\n\n2. Thùng màu xanh lá: Dành cho chất thải thực phẩm/hữu cơ (thức ăn thừa, vỏ trái cây, lá cây). Nên dùng thùng có nắp đậy kín để tránh mùi hôi và côn trùng.\n\n3. Thùng màu xám/đen: Dành cho chất thải không tái chế được (túi ni lông bẩn, tã giấy, băng vệ sinh, đồ nhựa dùng một lần đã nhiễm bẩn).\n\n4. Thùng màu đỏ/cam: Dành cho chất thải nguy hại (pin, bóng đèn, thuốc hết hạn, hóa chất). Cần đảm bảo thùng kín và an toàn.\n\nLưu ý: Rác cồng kềnh (đồ nội thất, thiết bị điện tử) cần được để riêng và liên hệ với đơn vị thu gom theo quy định địa phương. Nhiều thành phố lớn hiện đã có lịch thu gom riêng cho từng loại rác." }] },
+        ],
+      });
+
+      try {
+        const result = await chatSession.sendMessage(userMessage);
+        return result.response.text();
+      } catch (error) {
+        console.error('Error sending message:', error);
+        return "Có lỗi xảy ra khi xử lý yêu cầu của bạn. Vui lòng thử lại sau.";
+      }
+    }    async function sendMessage() {
+      const chatInput = document.getElementById('chat-input');
+      const chatOutput = document.getElementById('chat-output');
+
+      const msg = chatInput.value.trim();
+      if (!msg) return;
+
+      // Create and append user message
+      const userMessage = document.createElement('p');
+      userMessage.classList.add('user-message');
+      userMessage.textContent = msg;
+      chatOutput.appendChild(userMessage);
+      chatInput.value = '';
+
+      // Show thinking status
+      const thinkingMessage = document.createElement('p');
+      thinkingMessage.classList.add('ai-message');
+      thinkingMessage.textContent = langConfig.thinkingMessage;
+      chatOutput.appendChild(thinkingMessage);
+      chatOutput.scrollTop = chatOutput.scrollHeight;
+
+      // Get AI response
+      try {
+        const aiResponse = await run(msg);
+        chatOutput.removeChild(thinkingMessage);
+
+        // Create and append AI message
+        const aiMessage = document.createElement('p');
+        aiMessage.classList.add('ai-message');
+        aiMessage.textContent = aiResponse;
+        chatOutput.appendChild(aiMessage);
+        chatOutput.scrollTop = chatOutput.scrollHeight;
+
+        // Speak the AI response
+        textToSpeech(aiResponse);      } catch (error) {
+        chatOutput.removeChild(thinkingMessage);
+        const errorMessage = document.createElement('p');
+        errorMessage.classList.add('ai-message');
+        errorMessage.textContent = langConfig.errorMessage;
+        chatOutput.appendChild(errorMessage);
+        chatOutput.scrollTop = chatOutput.scrollHeight;
+      }
+    }
+
+    document.getElementById('send-button').addEventListener('click', sendMessage);
+    
+    document.getElementById('clear-button').addEventListener('click', () => {
+      speechQueue.cancel(); // Stop any ongoing speech
+      document.getElementById('chat-output').innerHTML = '';
+    });    document.getElementById('chat-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendMessage();
+      }
+    });    
+    
+    // Toggle voice on/off
+    document.getElementById('voice-toggle').addEventListener('click', function() {
+      voiceEnabled = !voiceEnabled;
+      const voiceToggle = document.getElementById('voice-toggle');
+      
+      if (voiceEnabled) {
+        voiceToggle.classList.remove('voice-off');
+        voiceToggle.classList.add('voice-on');
+        voiceToggle.innerHTML = '<span class="material-symbols-outlined">volume_up</span>';
+        voiceToggle.title = "Tắt đọc";
+      } else {
+        voiceToggle.classList.remove('voice-on');
+        voiceToggle.classList.add('voice-off');
+        voiceToggle.innerHTML = '<span class="material-symbols-outlined">volume_off</span>';
+        voiceToggle.title = "Bật đọc";
+        
+        // Dừng bất kỳ âm thanh nào đang phát
+        speechQueue.cancel();
+      }
+    });
+      document.getElementById('speech-button').addEventListener('click', startSpeechRecognition);    // Hiển thị thông báo chào mừng
+    window.addEventListener('DOMContentLoaded', () => {
+      const chatOutput = document.getElementById('chat-output');
+      const welcomeMessage = document.createElement('p');
+      welcomeMessage.classList.add('ai-message');
+      welcomeMessage.textContent = langConfig.welcomeMessage;
+      chatOutput.appendChild(welcomeMessage);
+    });
+  </script>
+</body>
+</html>
