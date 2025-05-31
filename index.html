@@ -686,7 +686,13 @@
       background: rgba(0, 0, 0, 0.2);
     }
 
-    /* Hiệu ứng ánh sáng cho header */
+    /* Ép nav-buttons và nav-button luôn nhận click và nổi trên overlay */
+.nav-buttons, .nav-button {
+  pointer-events: auto !important;
+  z-index: 1001 !important;
+}
+
+/* Hiệu ứng ánh sáng cho header */
     .glow {
       position: absolute;
       width: 200px;
@@ -1494,4 +1500,3 @@
 
 </body>
 </html>
- 
